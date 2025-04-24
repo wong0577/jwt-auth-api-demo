@@ -1,11 +1,5 @@
 {
-    "build": {
-      "env": {
-        "NODE_ENV": "production"
-      }
-    },
-    "deploy": {
-      "startCommand": "npm start"
-    }
+  "deploy": {
+    "startCommand": "npm start"
   }
-  
+}
