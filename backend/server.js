@@ -1,1 +1,4 @@
-/* 见 canvas 中的 backend/server.js 内容 */
+app.get('/', (req, res) => {
+    res.send('JWT Auth API is running ✅');
+  });
+  
