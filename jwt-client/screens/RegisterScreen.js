@@ -1,0 +1,1 @@
+/* React Native RegisterScreen.js 内容 */
