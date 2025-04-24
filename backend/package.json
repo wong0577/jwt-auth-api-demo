@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "/* 见 canvas 中 README 内容 */",
   "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
+"scripts": {
+  "start": "node index.js",
+  "dev": "nodemon index.js",
+  "build": "echo 'no build step needed'"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
