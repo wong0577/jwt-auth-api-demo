@@ -11,7 +11,7 @@ let users = [];
 router.post('/register', async (req, res) => {
   const { username, password, role } = req.body;
 
-  const existingUser = users.find(user => user.username === username);
+  const existingUser = users.find(user => user.email === email);
   if (existingUser) {
     return res.status(400).json({ message: '用户名已存在' });
   }
@@ -30,9 +30,9 @@ router.post('/register', async (req, res) => {
 
 // 登录接口
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  const user = users.find(u => u.username === username);
+  const user = users.find(u => u.email  === email );
   if (!user) return res.status(400).json({ message: '用户名不存在' });
 
   const isMatch = await bcrypt.compare(password, user.password);
