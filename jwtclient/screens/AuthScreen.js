@@ -7,63 +7,44 @@ import {
   Alert,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import { login, register } from '../api/api';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext'; // ✅ 用AuthContext
+
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false); // 🔥 新增loading防止重复提交
   const navigation = useNavigation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, register } = useAuth(); // ✅ 用context提供的 login 和 register
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const { control, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
     try {
+      setSubmitting(true);
       if (isLogin) {
-        await login({
-          email: data.email,
-          password: data.password,
-        });
-        navigation.replace('Home');
+        await login({ email: data.email, password: data.password });
+        navigation.replace('Home'); // ✅ login成功，user已存在，Home注册了
       } else {
-        await register({
-          email: data.email,
-          password: data.password,
-          username: data.username,
-        });
-  
-        // 注册后直接登录（只要 email/password）
-        await login({
-          email: data.email,
-          password: data.password,
-        });
-        // 存储Token
-        await AsyncStorage.setItem('accessToken', loginData.accessToken);
-        await AsyncStorage.setItem('refreshToken', loginData.refreshToken);
-
-        Alert.alert('注册成功 ✅', '欢迎你！');
-        
-        setUser(loginData.user);
-        //navigation.replace('Home');
+        await register({ email: data.email, password: data.password, username: data.username });
+        navigation.replace('Home');
       }
     } catch (err) {
       console.log('==== FULL ERROR ====');
-      console.log(JSON.stringify(err.response?.data, null, 2)); // 打印完整错误内容！
+      console.log(JSON.stringify(err.response?.data, null, 2));
 
       const errorMessage =
-        err.response?.data?.message || // 后端自定义返回的 message
-        err.response?.data || // 后端直接返回的数据
-        err.message || // axios 内置 message
-        '发生未知错误'; // 都没有就显示默认
-
+        err.response?.data?.error || 
+        err.response?.data?.message ||
+        err.message ||
+        '发生未知错误';
+      
       Alert.alert('错误', errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -79,7 +60,7 @@ export default function AuthScreen() {
         render={({ field: { onChange, value } }) => (
           <TextInput
             placeholder="邮箱"
-            value={value ?? ''}  // 🔥 加一层保护，防止 undefined
+            value={value ?? ''}
             onChangeText={onChange}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -89,7 +70,7 @@ export default function AuthScreen() {
       />
       {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
 
-      {/* 昵称，仅注册模式下显示 */}
+      {/* 昵称（仅注册时显示） */}
       {!isLogin && (
         <>
           <Controller
@@ -99,7 +80,7 @@ export default function AuthScreen() {
             render={({ field: { onChange, value } }) => (
               <TextInput
                 placeholder="昵称"
-                value={value ?? ''}  // 🔥 加一层保护，防止 undefined
+                value={value ?? ''}
                 onChangeText={onChange}
                 style={[styles.input, errors.username && styles.inputError]}
               />
@@ -116,8 +97,8 @@ export default function AuthScreen() {
         rules={{ required: '密码不能为空', minLength: { value: 6, message: '密码至少6位' } }}
         render={({ field: { onChange, value } }) => (
           <TextInput
-            placeholder="密码" 
-            value={value ?? ''}  // 🔥 加一层保护，防止 undefined
+            placeholder="密码"
+            value={value ?? ''}
             onChangeText={onChange}
             secureTextEntry={!showPassword}
             style={[styles.input, errors.password && styles.inputError]}
@@ -132,9 +113,19 @@ export default function AuthScreen() {
       </TouchableOpacity>
 
       {/* 提交按钮 */}
-      <Button title={isLogin ? '登录' : '注册'} onPress={handleSubmit(onSubmit)} />
+      <TouchableOpacity
+        onPress={handleSubmit(onSubmit)}
+        style={[styles.button, submitting && { opacity: 0.6 }]}
+        disabled={submitting}
+      >
+        {submitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>{isLogin ? '登录' : '注册'}</Text>
+        )}
+      </TouchableOpacity>
 
-      {/* 模式切换 */}
+      {/* 切换模式 */}
       <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchBtn}>
         <Text style={styles.switchText}>
           {isLogin ? '没有账号？去注册 ➡️' : '已有账号？去登录 ➡️'}
@@ -173,6 +164,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginLeft: 4,
   },
+  button: {
+    backgroundColor: '#007bff',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   switchBtn: {
     marginTop: 20,
     alignItems: 'center',
@@ -188,16 +190,5 @@ const styles = StyleSheet.create({
   togglePassText: {
     color: '#007bff',
     fontSize: 13,
-  },
-  socialBtn: {
-    backgroundColor: '#eee',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginHorizontal: 8,
-  },
-  socialText: {
-    fontWeight: 'bold',
-    color: '#333',
   },
 });
