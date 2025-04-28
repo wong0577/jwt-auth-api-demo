@@ -13,10 +13,16 @@ export const AuthProvider = ({ children }) => {
     const init = async () => {
       try {
         const token = await AsyncStorage.getItem('accessToken');
-        if (token) {
-          const profile = await getProfile();
-          setUser(profile);
+        if (!token) {
+          // ❗ 没有token，直接跳过，不打API
+          console.log('没有token，跳过自动登录');
+          return;
         }
+        
+        // ✅ 有token，才去拿Profile
+        const profile = await getProfile();
+        setUser(profile);
+        
       } catch (error) {
         console.error('自动登录失败', error);
         await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
