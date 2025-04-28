@@ -27,11 +27,5 @@ export const getProfile = async () => {
 
 // 登出
 export const logout = async () => {
-  const refreshToken = await AsyncStorage.getItem('refreshToken');
-  try {
-    await axios.post('/logout', { token: refreshToken });
-  } catch (e) {
-    console.warn('登出请求失败，但本地仍然清理token', e);
-  }
   await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
 };

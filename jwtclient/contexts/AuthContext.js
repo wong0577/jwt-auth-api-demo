@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await apiLogout();
+      await apiLogout(); // ✅ 注意是 apiLogout() 小写a
       setUser(null);
     } catch (error) {
       console.error('登出出错，但本地仍然清理', error);
