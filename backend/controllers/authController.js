@@ -23,7 +23,30 @@ exports.register = async (req, res) => {
 
   users.push(newUser);
 
-  res.json({ message: 'User registered successfully' });
+  // ✅ 注册成功后，签发 AccessToken 和 RefreshToken
+  const accessToken = jwt.sign(
+    { id: newUser.id, email: newUser.email, role: newUser.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+  
+  const refreshToken = jwt.sign(
+    { id: newUser.id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  // ✅ 返回 accessToken + refreshToken + user
+  res.json({
+    accessToken,
+    refreshToken,
+    user: {
+      id: newUser.id,
+      email: newUser.email,
+      username: newUser.username,
+      role: newUser.role
+    }
+  });
 };
 
 // 登录
