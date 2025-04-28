@@ -24,31 +24,59 @@ npm install axios react-native-toast-message
 
 ## 📂 项目结构
 
- jwtclient/
-├── App.js                    # App 入口，包裹 AuthProvider + 路由器
-├── index.js                  # Expo 入口（main: "index.js" 时启用）
-├── package.json              # 项目配置及依赖
-├── babel.config.js           # Babel 转译配置
-├── assets/                   # 图片、图标、启动页等资源
+/jwt-auth-app/
+├── App.js                         // App入口，包裹AuthProvider + AppNavigator
+│
+├── /contexts/
+│   └── AuthContext.js              // 登录状态管理器（user, login, register, logout）
+│
+├── /navigation/
+│   └── AppNavigator.js             // 统一管理页面跳转（登录/主页/底部Tab）
+│
+├── /screens/
+│   ├── AuthScreen.js               // 登录/注册页
+│   ├── HomeScreen.js               // 首页（欢迎回来 + header登出icon）
+│   ├── ProfileScreen.js            // 个人资料页
+│   └── SettingsScreen.js           // 设置页（带登出按钮）
+│
+├── /api/
+│   ├── api.js                      // 封装 login, register, logout, getProfile
+│   └── axiosInstance.js            // 封装 axios，自动加token、自动续签
+│
+├── /assets/
+│   └── （可放logo、图片等资源）
+│
+├── /components/
+│   └── （可放自定义小组件，例如Button组件、Card组件）
+│
+├── package.json                    // 项目信息
+├── app.json                        // Expo专用配置（如果是Expo项目）
+└── README.md                       // 项目说明文档
 
-├── api/
-│   ├── axiosInstance.js      # 配置 axios 实例（baseURL + token 拦截）
-│   └── api.js                # 登录、注册、获取资料等封装 API 请求方法
 
-├── contexts/
-│   └── AuthContext.js        # 管理全局登录状态、token、用户信息
+页面                            | 功能
+AuthScreen                      | 登录/注册（+切换模式按钮）
+HomeScreen                      | 欢迎回来 + 顶栏登出icon
+ProfileScreen                   | 显示用户名、邮箱、角色
+SettingsScreen                  | 显示设置 + 退出登录按钮
+AppNavigator                    | 登录判断，跳到 Tab 还是登录页
+AppTabs (BottomTabNavigator)    | Home / Profile / Settings 三个底部导航
 
-├── navigation/
-│   └── AppNavigator.js       # 页面导航器（根据 user 决定跳转 Auth or Home）
 
-├── screens/
-│   ├── AuthScreen.js         # 登录 + 注册页（切换模式）
-│   ├── HomeScreen.js         # 登录成功后的首页（欢迎语、登出）
-│   ├── ProfileScreen.js      # 用户信息展示页（头像、昵称）
-│   └── EditProfileScreen.js  # 修改用户昵称、头像等资料
+App.js
+  ⬇️
+<AuthProvider> (自动读取token)
+  ⬇️
+<AppNavigator>
+  ⬇️
+(user存在?)
+    ├── ❌ 没有user ➔ 进入 AuthScreen (登录/注册页)
+    └── ✅ 有user ➔ 进入 MainApp (底部Tab)
 
-└── utils/                    # 可选工具函数目录（比如 token 管理、验证工具等）
-
+MainApp (BottomTab)
+  ├── HomeScreen (首页)
+  ├── ProfileScreen (用户资料)
+  └── SettingsScreen (退出登录)
 
 
 ---
