@@ -46,7 +46,14 @@ exports.login = async (req, res) => {
     { expiresIn: '1h' }
   );
 
-  res.json({ token });
+  // ✅ 生成 Refresh Token（7天）
+  const refreshToken = jwt.sign(
+    { id: user.id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: '7d' }
+  );
+  
+  res.json({ accessToken, refreshToken });
 };
 
 // 👇 新增
