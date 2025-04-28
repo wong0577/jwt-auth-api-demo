@@ -1,48 +1,43 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  Alert,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../contexts/AuthContext'; // ✅ 用AuthContext
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false); // 🔥 新增loading防止重复提交
-  const navigation = useNavigation();
-  const { login, register } = useAuth(); // ✅ 用context提供的 login 和 register
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); // ✅ 错误信息 state
 
+  const { login, register } = useAuth();
+  const navigation = useNavigation();
   const { control, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
     try {
       setSubmitting(true);
+      setErrorMessage(''); // 清除上次的错误
+
       if (isLogin) {
         await login({ email: data.email, password: data.password });
-        //navigation.replace('MainApp'); // ✅ login成功，user已存在，Home注册了
       } else {
         await register({ email: data.email, password: data.password, username: data.username });
-        //navigation.replace('MainApp');
       }
-    } catch (err) {
-      console.log('==== FULL ERROR ====');
-      console.log(JSON.stringify(err.response?.data, null, 2));
 
-      const errorMessage =
-        err.response?.data?.error || 
-        err.response?.data?.message ||
-        err.message ||
-        '发生未知错误';
-      
-      Alert.alert('错误', errorMessage);
+    } catch (err) {
+      console.log('登录/注册失败', err);
+
+      let message = '发生未知错误';
+      if (err.response?.data?.error) {
+        message = err.response.data.error;
+      } else if (err.response?.data?.message) {
+        message = err.response.data.message;
+      } else if (err.message) {
+        message = err.message;
+      }
+
+      setErrorMessage(message); // ✅ 设置错误信息到页面
     } finally {
       setSubmitting(false);
     }
@@ -52,7 +47,7 @@ export default function AuthScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>{isLogin ? '登录' : '注册新用户'}</Text>
 
-      {/* 邮箱 */}
+      {/* 邮箱输入 */}
       <Controller
         control={control}
         name="email"
@@ -70,7 +65,7 @@ export default function AuthScreen() {
       />
       {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
 
-      {/* 昵称（仅注册时显示） */}
+      {/* 昵称输入（注册时才显示） */}
       {!isLogin && (
         <>
           <Controller
@@ -90,7 +85,7 @@ export default function AuthScreen() {
         </>
       )}
 
-      {/* 密码 */}
+      {/* 密码输入 */}
       <Controller
         control={control}
         name="password"
@@ -112,7 +107,7 @@ export default function AuthScreen() {
         <Text style={styles.togglePassText}>{showPassword ? '🙈 隐藏密码' : '👁 显示密码'}</Text>
       </TouchableOpacity>
 
-      {/* 提交按钮 */}
+      {/* 登录/注册按钮 */}
       <TouchableOpacity
         onPress={handleSubmit(onSubmit)}
         style={[styles.button, submitting && { opacity: 0.6 }]}
@@ -125,13 +120,17 @@ export default function AuthScreen() {
         )}
       </TouchableOpacity>
 
-      {/* 切换模式 */}
-      <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchBtn}>
+      {/* 错误信息显示 */}
+      {errorMessage !== '' && (
+        <Text style={styles.errorMessage}>{errorMessage}</Text>
+      )}
+
+      {/* 切换 登录/注册 按钮 */}
+      <TouchableOpacity onPress={() => { setIsLogin(!isLogin); setErrorMessage(''); }} style={styles.switchBtn}>
         <Text style={styles.switchText}>
           {isLogin ? '没有账号？去注册 ➡️' : '已有账号？去登录 ➡️'}
         </Text>
       </TouchableOpacity>
-
     </View>
   );
 }
@@ -174,6 +173,12 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  errorMessage: {
+    color: 'red',
+    marginTop: 12,
+    textAlign: 'center',
+    fontSize: 14,
   },
   switchBtn: {
     marginTop: 20,
