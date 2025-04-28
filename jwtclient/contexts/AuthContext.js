@@ -1,53 +1,52 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// jwtclient/contexts/AuthContext.js
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { login as loginApi, register as registerApi, getProfile, logout as logoutApi } from '../api/api';
+import { login as apiLogin, register as apiRegister, getProfile, logout as apiLogout } from '../api/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);       // 用户信息
-  const [loading, setLoading] = useState(true); // 加载状态
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const init = async () => {
-      const token = await AsyncStorage.getItem('accessToken');
-      console.log('📦 accessToken:', token);
-      if (token) {
-        try {
+      try {
+        const token = await AsyncStorage.getItem('accessToken');
+        if (token) {
           const profile = await getProfile();
-          console.log('👤 用户资料:', profile);
           setUser(profile);
-        } catch (err) {
-          console.log('❌ 获取 profile 失败', err);
-          await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
         }
+      } catch (error) {
+        console.error('自动登录失败', error);
+        await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-
-    init(); // ✅ 一定要调用 init()
+    init();
   }, []);
 
   const login = async ({ email, password }) => {
-    await loginApi({ email, password });
+    await apiLogin({ email, password });
     const profile = await getProfile();
-    setUser(profile); 
+    setUser(profile);
   };
-  
+
   const register = async ({ email, password, username }) => {
-    await registerApi({ email, password, username });
-    await login({ email, password });
+    await apiRegister({ email, password, username });
+    await login({ email, password }); // 注册后自动登录
   };
 
   const logout = async () => {
     try {
-      await logoutApi();
+      await apiLogout();
     } catch (error) {
-      console.log('⚠️ 登出 API 出错，但继续清理本地Token', error);
+      console.error('登出出错，但本地仍然清理', error);
+    } finally {
+      await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+      setUser(null);
     }
-    await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
-    setUser(null);
-    console.log('👋 已登出并清理Token');
   };
 
   return (
@@ -57,5 +56,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// 在组件中使用 useAuth() 获取登录状态与方法
 export const useAuth = () => useContext(AuthContext);
