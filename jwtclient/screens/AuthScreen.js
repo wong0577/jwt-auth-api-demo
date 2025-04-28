@@ -27,10 +27,10 @@ export default function AuthScreen() {
       setSubmitting(true);
       if (isLogin) {
         await login({ email: data.email, password: data.password });
-        navigation.replace('MainApp'); // ✅ login成功，user已存在，Home注册了
+        //navigation.replace('MainApp'); // ✅ login成功，user已存在，Home注册了
       } else {
         await register({ email: data.email, password: data.password, username: data.username });
-        navigation.replace('MainApp');
+        //navigation.replace('MainApp');
       }
     } catch (err) {
       console.log('==== FULL ERROR ====');
