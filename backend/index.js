@@ -7,8 +7,7 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret";
-
-const cors = require('cors');
+ 
 app.use(cors({
   origin: '*',   // 允许所有来源（开发测试用）
   credentials: true,

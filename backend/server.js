@@ -5,8 +5,7 @@ const authRoutes = require('./routes/auth');
 
 dotenv.config();
 const app = express();
-
-const cors = require('cors');
+ 
 app.use(cors({
   origin: '*',   // 允许所有来源（开发测试用）
   credentials: true,
