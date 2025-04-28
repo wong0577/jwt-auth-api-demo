@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('自动登录失败', error);
         await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+        setUser(null);  // ⛔ 失败一定要setUser(null)，避免假装登录成功
       } finally {
         setLoading(false);
       }
