@@ -40,13 +40,12 @@ exports.login = async (req, res) => {
     return res.status(400).json({ error: 'Invalid email or password' });
   }
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: '1h' }
   );
-
-  // ✅ 生成 Refresh Token（7天）
+  
   const refreshToken = jwt.sign(
     { id: user.id },
     process.env.JWT_REFRESH_SECRET,
